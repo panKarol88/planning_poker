@@ -1,6 +1,15 @@
 # Gemfile
 source 'https://rubygems.org'
 
-gem 'sinatra'
+ruby '>= 2.2'
+
+gem 'sinatra', '~> 2.0'
+
 gem 'irb'
-gem 'httparty'
+gem 'http'
+gem 'thin'
+
+group :test, :development do
+  gem 'pry-byebug'
+  gem 'dotenv'
+end
