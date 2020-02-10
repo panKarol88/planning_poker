@@ -13,10 +13,10 @@ require 'pry-byebug'
 set :server, :thin
 
 # APIs
-require './api/v1/routes'
-
+require './api/v1/poker_controller'
+# HELPERS
+Dir['./helpers/*.rb'].each {|file| require file }
 # SERVICES
 Dir['./services/*.rb'].each {|file| require file }
-
 # MODELS
 Dir['./models/*.rb'].each {|file| require file }
