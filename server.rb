@@ -10,6 +10,8 @@ require 'thin'
 require 'active_model'
 require 'pry-byebug'
 
+require 'logger'
+
 set :server, :thin
 
 # APIs

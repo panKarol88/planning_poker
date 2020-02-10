@@ -13,6 +13,7 @@ namespace '/api/v1' do
         # out.callback { connections.delete(out) }
       end
     end
+    'subscribed'
   end
 
   namespace '/client' do
@@ -25,10 +26,10 @@ namespace '/api/v1' do
       body_hash = JSON.parse body if body.present?
       host_name = body_hash['host_name']
 
-      p connections.map{|c| c.app.env['REQUEST_URI'].split('/').last}
       connections.select{|c| c.app.env['REQUEST_URI'].split('/').last == host_name}.each do |out|
         out << body
       end
+      'voted'
     end
   end
 end

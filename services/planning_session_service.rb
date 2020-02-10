@@ -1,5 +1,6 @@
 class PlanningSessionService
   include RequestHelper
+  include LoggerHelper
   attr_reader :planning_session, :vote_count
 
   def initialize(voters_count, host_name)
@@ -8,18 +9,16 @@ class PlanningSessionService
   end
 
   def proceed
-    handle_validation
+    @planning_session.validate!
     start_poker
+  rescue ActiveModel::ValidationError
+    log_error(@planning_session.errors.full_messages)
   end
 
   private
 
   def create_planning_session(voters_count, host_name)
     @planning_session = PlanningSession.new(voters_count, host_name)
-  end
-
-  def handle_validation
-    puts @planning_session.errors.full_messages unless @planning_session.valid?
   end
 
   def display_message

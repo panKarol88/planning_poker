@@ -14,7 +14,8 @@ while command != 'exit'
     planning_service = PlanningSessionService.new(command.split[2], name)
     planning_service.proceed
   when command.split[0..1].join(' ') == 'poker vote'
-    puts 'BBB'
+    planning_service = VotingService.new(name, host_name, command.split[2])
+    planning_service.vote
   when command === 'exit'
     puts 'Bye, bye!'
   else
