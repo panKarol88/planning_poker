@@ -1,25 +1,34 @@
 namespace '/api/v1' do
-  before do
-    content_type 'application/json'
-  end
+  connections = []
 
   namespace '/host' do
-    connections = []
-
-    get '/subscribe' do
+    before do
       content_type 'text/event-stream'
+    end
+
+    get '/subscribe/:host_name' do
       stream(:keep_open) do |out|
         connections << out
         # purge dead connections
-        out.callback { connections.delete(out) }
+        # out.callback { connections.delete(out) }
       end
     end
+  end
 
-    post '/:message' do
-      content_type 'text/event-stream'
+  namespace '/client' do
+    before do
+      content_type 'application/json'
+    end
 
-      connections.each do |out|
-        out << params['message'] << "\n"
+    post '/vote' do
+      body = request.body.read
+      body_hash = JSON.parse body if body.present?
+      host_mame = body_hash['host_name']
+
+      p connections.map{|c| c.app.env['REQUEST_URI'].split('/').last}
+      connections.select{|c| c.app.env['REQUEST_URI'].split('/').last == host_mame}.each do |out|
+      # connections.each do |out|
+        out << body
       end
     end
   end

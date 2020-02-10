@@ -29,5 +29,5 @@ end
 desc 'client console'
 task :start do
   logger.info ' --- PLANNING POKER --- STARTS'
-  system 'irb -r ./server.rb'
+  system 'irb -r ./client_script.rb'
 end

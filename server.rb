@@ -7,12 +7,16 @@ require 'net/http'
 require 'uri'
 require 'thin'
 
+require 'active_model'
 require 'pry-byebug'
 
 set :server, :thin
 
 # APIs
 require './api/v1/routes'
+
+# SERVICES
+Dir['./services/*.rb'].each {|file| require file }
 
 # MODELS
 Dir['./models/*.rb'].each {|file| require file }
