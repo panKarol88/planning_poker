@@ -13,7 +13,14 @@ namespace '/api/v1' do
         # out.callback { connections.delete(out) }
       end
     end
-    'subscribed'
+
+    get '/unsubscribe/:host_name' do
+      host_name = params['host_name']
+      connections.select{|c| c.app.env['REQUEST_URI'].split('/').last == host_name}.each do |out|
+        out << { text: 'Voting has been restarted. Please vote again.' }.to_json
+        out.close
+      end
+    end
   end
 
   namespace '/client' do
@@ -29,7 +36,6 @@ namespace '/api/v1' do
       connections.select{|c| c.app.env['REQUEST_URI'].split('/').last == host_name}.each do |out|
         out << body
       end
-      'voted'
     end
   end
 end

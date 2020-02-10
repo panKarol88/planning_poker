@@ -5,20 +5,23 @@ name = gets.chomp
 
 puts 'Please start or join planning.'
 command = nil
-host_name = nil
+# host_name = nil
+host_name = 'karol'
+voters_count = nil
 
 while command != 'exit'
   command = gets.chomp
 
   case
   when command.split[0..1].join(' ') == 'poker start'
-    planning_service = PlanningSessionService.new(command.split[2], name)
-    planning_service.proceed
+    voters_count = command.split[2]
+    PlanningSessionService.new(voters_count, name).proceed
   when  command.split[0..2].join(' ') == 'set host to'
     host_name = command.split[3]
   when command.split[0..1].join(' ') == 'poker vote'
-    planning_service = VotingService.new(name, host_name, command.split[2])
-    planning_service.vote
+    VotingService.new(name, host_name, command.split[2]).vote
+  when command === 'repeat'
+    PlanningSessionService.new(voters_count, name).proceed
   when command === 'exit'
     puts 'Bye, bye!'
   else

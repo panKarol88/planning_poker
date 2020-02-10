@@ -6,7 +6,7 @@ class PlanningSession
   attr_reader :voters_count, :host_name
 
   def initialize(voters_count, host_name)
-    @voters_count = voters_count
+    @voters_count = voters_count.to_i
     @host_name = host_name
   end
 end

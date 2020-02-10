@@ -7,6 +7,13 @@ module RequestHelper
     http.request(request)
   end
 
+  def send_get(url)
+    uri = URI(url)
+    http = Net::HTTP.new(uri.host, uri.port)
+    request = Net::HTTP::Get.new(uri.path)
+    http.request(request)
+  end
+
   def open_stream(url, progress_handler)
     uri = URI(url)
     Net::HTTP.start(uri.host, uri.port) do |http|

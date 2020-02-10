@@ -10,6 +10,10 @@ class VotingService
   def vote
     @vote.validate!
     send_post('http://localhost:4567/api/v1/client/vote', @vote.body)
+
+
+    # url = "http://localhost:4567/api/v1/host/subscribe/karol"
+    # open_stream(url, display_message)
   rescue ActiveModel::ValidationError
     log_error(@vote.errors.full_messages)
   end
@@ -17,5 +21,11 @@ class VotingService
   private
   def create_vote(voter_name, host_name, points)
     @vote = Vote.new(voter_name, host_name, points)
+  end
+
+  def display_message
+    Proc.new do |chunk|
+      p chunk if chunk
+    end
   end
 end
