@@ -7,11 +7,6 @@ namespace '/api/v1' do
     end
 
     get '/subscribe/:host_name' do
-      stream(:keep_open) do |out|
-        connections << out
-        # purge dead connections
-        # out.callback { connections.delete(out) }
-      end
     end
   end
 
@@ -27,7 +22,6 @@ namespace '/api/v1' do
 
       p connections.map{|c| c.app.env['REQUEST_URI'].split('/').last}
       connections.select{|c| c.app.env['REQUEST_URI'].split('/').last == host_mame}.each do |out|
-      # connections.each do |out|
         out << body
       end
     end
