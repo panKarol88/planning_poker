@@ -1,4 +1,5 @@
-class DisplayService
+module DisplayHelper
+  include ::PlanningHelper
   # [##########               ] [2 out of 5 votes added]
   def show_progress(current, max, range=25)
     progress = '['
@@ -21,13 +22,14 @@ class DisplayService
   # 3 Kamil, Kasia, Mateusz
   # 5 -
   # 8 -
-  def show_results(data, final_note)
+  def show_results(data)
+    final_note = count_result(data)
     result = "Final note: #{final_note} \n"
     result << "---------------- \n"
 
     [1,2,3,5,8].each do |p|
       result << "#{p} "
-      voters = data.select{|d| d['points'].to_i == p}.map{|d| d['voter_name']}
+      voters = data.map{|name, vote| name if vote.to_i == p}.compact
       if voters.present?
         result << voters.join(', ')
       else

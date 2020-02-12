@@ -20,10 +20,13 @@ task :server, [:environment, :port] do |t, args|
 
   environment = args[:environment] || ENV['ENVIRONMENT'] || 'development'
   port = args[:port] || ENV['PORT'] || '4567'
+  redis_port = ENV['REDIS_PORT'] || '6379'
+
+  logger.info " START REDIS - LISTENNING ON PORT: #{redis_port}"
+  system "redis-server --port #{redis_port} --daemonize yes"
 
   logger.info " ENVIRONMENT: #{environment}, LISTENNING ON PORT: #{port}"
-
-  exec "thin -R config.ru start -e #{environment} -p #{port}"
+  system "thin -R config.ru start -e #{environment} -p #{port}"
 end
 
 desc 'client console'

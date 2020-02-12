@@ -6,14 +6,22 @@ require 'sinatra/streaming'
 require 'net/http'
 require 'uri'
 require 'thin'
+require 'redis'
+require 'redlock'
 
 require 'active_model'
 require 'pry-byebug'
 
 require 'logger'
 
-set :server, :thin
+require 'dotenv'
+Dotenv.load
 
+set :server, :thin
+set :server_settings, :timeout => 600
+
+# INITIALIZERS
+require './config/initializers'
 # APIs
 require './api/v1/poker_controller'
 # HELPERS

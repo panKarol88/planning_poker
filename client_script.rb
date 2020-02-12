@@ -13,6 +13,8 @@ while command != 'exit'
   command = gets.chomp
 
   case
+  when command.split[0..1].join(' ') == 'set name'
+    name = command.split[2]
   when command.split[0..1].join(' ') == 'poker start'
     voters_count = command.split[2]
     PlanningSessionService.new(voters_count, name).proceed
@@ -21,7 +23,9 @@ while command != 'exit'
   when command.split[0..1].join(' ') == 'poker vote'
     VotingService.new(name, host_name, command.split[2]).vote
   when command === 'repeat'
-    PlanningSessionService.new(voters_count, name).proceed
+    PlanningSessionService.new(voters_count, name).restart
+  when command === 'end'
+    PlanningSessionService.new(voters_count, name).end_planning
   when command === 'exit'
     puts 'Bye, bye!'
   else

@@ -9,6 +9,8 @@ gem 'sinatra-contrib'
 gem 'irb'
 gem 'http'
 gem 'thin'
+gem 'redis'
+gem 'redlock'
 
 gem 'activemodel'
 
