@@ -1,26 +1,23 @@
 class PokerStorageService
   include StorageHelper
   include PlanningHelper
-  attr_reader :host_name, :voter_name, :points, :voting_status
+  attr_reader :voting_status
 
-  def initialize(host_name:, voter_name:, points:)
-    @host_name = host_name
-    @voter_name = voter_name
-    @points = points
+  def initialize()
     @voting_status = voting_statuses[:initialized]
   end
 
-  def set_vote!
+  def set_vote!(host_name:, voter_name:, points:)
     # lock for 20s or to end of this block
-    $redlock.lock("locks:#{@host_name}", 20000) do |locked|
+    $redlock.lock("locks:#{host_name}", 20000) do |locked|
       if locked
-        planning = r_get(@host_name)
+        planning = r_get(host_name)
         if planning.blank?
           @voting_status = voting_statuses[:no_such_planning]
           return false
         end
 
-        if planning['voters'][@voter_name].present?
+        if planning['voters'][voter_name].present?
           @voting_status = voting_statuses[:already_voted]
           return false
         end
@@ -30,10 +27,10 @@ class PokerStorageService
           return false
         end
 
-        planning['voters'][@voter_name] = @points
-        r_response = r_set(@host_name, planning.to_json, true)
+        planning['voters'][voter_name] = points
+        r_response = r_set(host_name, planning.to_json, true)
 
-        if r_response != 'OK'
+        unless r_response
           @voting_status = voting_statuses[:unsuccessful_vote]
           return false
         end

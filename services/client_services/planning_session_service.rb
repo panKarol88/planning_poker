@@ -20,7 +20,7 @@ class PlanningSessionService
 
   def restart
     @listener.terminate if @listener.present?
-    if r_get(@planning_session.host_name).nil?
+    if stored_planning(@planning_session.host_name).blank?
       show_text 'There is nothing to repeat.'
       return
     end
@@ -35,7 +35,7 @@ class PlanningSessionService
                     voting_statuses[:ended],
                     reason || 'Voting has been closed by the host.')
     show_text reason if reason.present?
-    r_release(@planning_session.host_name)
+    delete_planning @planning_session.host_name
     close
   end
 
@@ -56,8 +56,11 @@ class PlanningSessionService
           when voting_statuses[:voters_max_reached]
             print_progress @planning_session.host_name
             print_results @planning_session.host_name, true
-            final_score = count_result(r_get(@planning_session.host_name)['voters'])
+            planning = stored_planning @planning_session.host_name
+            final_score = count_result(planning['voters'])
             if final_score != 'DRAW'
+              # TODO
+              sleep(3)
               end_planning "Voting ends with final score: #{final_score}"
             end
           when voting_statuses[:restarted]
@@ -84,9 +87,9 @@ class PlanningSessionService
   end
 
   def start_poker(override=false)
-    if override || r_get(@planning_session.host_name).nil?
-      show_progress(0, @planning_session.voters_count)
-      r_set @planning_session.host_name, @planning_session.init_structure.to_json
+    if override || stored_planning(@planning_session.host_name).blank?
+      show_progress 0, @planning_session.voters_count
+      upload_planning @planning_session.host_name, @planning_session.init_structure.to_json
       @listener = Thread.new do
         start
       end

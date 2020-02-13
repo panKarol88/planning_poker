@@ -27,6 +27,6 @@ require './api/v1/poker_controller'
 # HELPERS
 Dir['./helpers/*.rb'].each {|file| require file }
 # SERVICES
-Dir['./services/*.rb'].each {|file| require file }
+Dir['./services/server_services/*.rb'].each {|file| require file }
 # MODELS
 Dir['./models/*.rb'].each {|file| require file }

@@ -12,6 +12,6 @@ Dotenv.load
 # HELPERS
 Dir['./helpers/*.rb'].each {|file| require file }
 # SERVICES
-Dir['./services/*.rb'].each {|file| require file }
+Dir['./services/client_services/*.rb'].each {|file| require file }
 # MODELS
 Dir['./models/*.rb'].each {|file| require file }

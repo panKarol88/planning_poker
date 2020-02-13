@@ -39,8 +39,6 @@ class VotingService
     end
 
     body = JSON.parse response.body if response.body.present?
-    puts 'RESPONSE'
-    puts body['status']
     case body['status']
     when voting_statuses[:successful_vote]
       print_progress @vote.host_name
@@ -60,18 +58,21 @@ class VotingService
 
   def progress_handler
     Proc.new do |chunk|
-      puts 'CHUNK'
-      puts chunk
       if chunk.present?
         message = JSON.parse chunk
         if message['event'].present?
           case message['event']
           when voting_statuses[:successful_vote]
             print_progress @vote.host_name
-          when voting_statuses[:voters_max_reached], voting_statuses[:ended]
+          when voting_statuses[:voters_max_reached]
             print_progress @vote.host_name
             print_results @vote.host_name
-          when voting_statuses[:restarted]
+            # planning = stored_planning @vote.host_name
+            # final_score = count_result(planning['voters'])
+            # if final_score != 'DRAW'
+            #   @listener.terminate if @listener.present?
+            # end
+          when voting_statuses[:restarted], voting_statuses[:ended]
             show_text message['text']
             @listener.terminate if @listener.present?
           end

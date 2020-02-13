@@ -30,6 +30,13 @@ module RequestHelper
     http.request(request)
   end
 
+  def send_delete(url)
+    uri = req_uri(url)
+    http = Net::HTTP.new(uri.host, uri.port)
+    request = Net::HTTP::Delete.new(uri.path)
+    http.request(request)
+  end
+
   def open_stream(url, progress_handler)
     uri = req_uri(url)
     Net::HTTP.start(uri.host, uri.port, { read_timeout: 600, open_timeout: 5 }) do |http|

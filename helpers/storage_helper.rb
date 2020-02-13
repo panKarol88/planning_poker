@@ -9,9 +9,11 @@ module StorageHelper
           $redis.set(key, value)
         else
           puts 'unsuccessful storage - helper'
+          return false
         end
       end
     end
+    return true
   end
 
   def r_get(key)
