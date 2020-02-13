@@ -18,3 +18,8 @@ group :test, :development do
   gem 'pry-byebug'
   gem 'dotenv'
 end
+
+group :test do
+  gem 'rack-test'
+  gem 'rspec'
+end

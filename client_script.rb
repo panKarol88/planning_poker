@@ -5,8 +5,7 @@ name = gets.chomp
 
 puts 'Please start or join planning.'
 command = nil
-# host_name = nil
-host_name = 'karol'
+host_name = nil
 voters_count = nil
 
 while command != 'exit'

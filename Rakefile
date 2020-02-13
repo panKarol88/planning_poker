@@ -30,7 +30,7 @@ task :server, [:environment, :port] do |t, args|
 end
 
 desc 'client console'
-task :start do
+task :client do
   logger.info ' --- PLANNING POKER --- STARTS'
   system 'irb -r ./client_script.rb'
 end

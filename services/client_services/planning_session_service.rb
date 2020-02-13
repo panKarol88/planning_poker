@@ -60,6 +60,8 @@ class PlanningSessionService
             final_score = count_result(planning['voters'])
             if final_score != 'DRAW'
               # TODO
+              # give subscribers a chance to get results before host end planning
+              # (could be handled better)
               sleep(3)
               end_planning "Voting ends with final score: #{final_score}"
             end
