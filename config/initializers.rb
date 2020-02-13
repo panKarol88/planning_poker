@@ -11,7 +11,7 @@ $redis.flushdb if ENV['ENVIRONMENT'] == 'test'
 $redlock = Redlock::Client.new(
                 [$redis], {
                 retry_count:   3,
-                retry_delay:   200, # milliseconds
+                retry_delay:   500, # milliseconds
                 retry_jitter:  50,  # milliseconds
                 redis_timeout: 0.1  # seconds
             })

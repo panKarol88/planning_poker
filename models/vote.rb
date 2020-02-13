@@ -9,6 +9,7 @@ class Vote
   validates :points, inclusion: {
       in: AVAILABLE_VALUES,
       message: " - These are only available values: #{AVAILABLE_VALUES}" }
+  validate :host_cannot_vote
 
   attr_reader :voter_name, :host_name, :points
 
@@ -20,5 +21,13 @@ class Vote
 
   def body
     { vote: { voter_name: voter_name, points: points }, host_name: host_name }
+  end
+
+  private
+
+  def host_cannot_vote
+    if voter_name == host_name
+      errors.add(:voter_name, ' --- You cannot bet at your own casino!')
+    end
   end
 end

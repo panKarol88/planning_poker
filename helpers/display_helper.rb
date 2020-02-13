@@ -22,7 +22,7 @@ module DisplayHelper
   # 3 Kamil, Kasia, Mateusz
   # 5 -
   # 8 -
-  def show_results(data)
+  def show_results(data, display_to_host=false)
     final_note = count_result(data)
     result = "Final note: #{final_note} \n"
     result << "---------------- \n"
@@ -38,7 +38,7 @@ module DisplayHelper
       result << "\n"
     end
     puts result
-    puts 'Type "repeat" if you want to repeat the poker.' if final_note == 'DRAW'
+    puts 'Type "poker repeat" if you want to repeat the poker.' if final_note == 'DRAW' && display_to_host
   end
 
   def show_text(text)

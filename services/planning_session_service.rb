@@ -3,30 +3,39 @@ class PlanningSessionService
   include LoggerHelper
   include StorageHelper
   include DisplayHelper
-  attr_reader :planning_session, :vote_count, :result
+  include PlanningHelper
+  attr_reader :planning_session, :vote_count, :result, :listener
 
   def initialize(voters_count, host_name)
     create_planning_session voters_count, host_name
-    @@vote_count = 0
-    @@planning_results = []
-    @result = nil
+    @listener = nil
   end
 
-  def proceed
+  def proceed(override=false)
     @planning_session.validate!
-    start_poker
+    start_poker override
   rescue ActiveModel::ValidationError
     log_error(@planning_session.errors.full_messages)
   end
 
   def restart
-    note_all_voters({ text: 'Voting has been restarted. Please vote again.'})
-    close
-    proceed
+    @listener.terminate if @listener.present?
+    if r_get(@planning_session.host_name).nil?
+      show_text 'There is nothing to repeat.'
+      return
+    end
+    note_all_voters(@planning_session.host_name,
+                    voting_statuses[:restarted],
+                    'Voting has been restarted. Please vote again.')
+    proceed true
   end
 
-  def end_planning
-    note_all_voters({ text: 'Voting has been closed by the host.'})
+  def end_planning(reason=nil)
+    note_all_voters(@planning_session.host_name,
+                    voting_statuses[:ended],
+                    reason || 'Voting has been closed by the host.')
+    show_text reason if reason.present?
+    r_release(@planning_session.host_name)
     close
   end
 
@@ -40,15 +49,22 @@ class PlanningSessionService
     Proc.new do |chunk|
       if chunk.present?
         message = JSON.parse chunk
-        case
-        when message['text'].present?
-          handle_text message['text']
-        when message['event'].present?
+        if message['event'].present?
           case message['event']
-          when 'successful_vote'
+          when voting_statuses[:successful_vote]
             print_progress @planning_session.host_name
-          when 'voters_max_reached'
-            print_results @planning_session.host_name
+          when voting_statuses[:voters_max_reached]
+            print_progress @planning_session.host_name
+            print_results @planning_session.host_name, true
+            final_score = count_result(r_get(@planning_session.host_name)['voters'])
+            if final_score != 'DRAW'
+              end_planning "Voting ends with final score: #{final_score}"
+            end
+          when voting_statuses[:restarted]
+            @listener.terminate if @listener.present?
+          when voting_statuses[:ended]
+            show_text message['text']
+            @listener.terminate if @listener.present?
           end
         else
           puts message
@@ -57,35 +73,27 @@ class PlanningSessionService
     end
   end
 
-  def note_all_about_progress
-    note_all_voters({ progress: { vote_count: @@vote_count, voters_count: @planning_session.voters_count }})
-  end
-
-  def handle_text(text)
-    DisplayService.new().show_text(text)
-  end
-
-  def note_all_voters(body)
-    body[:host_name] = @planning_session.host_name
-    body[:recipient] = 'all'
-    send_post('http://localhost:4567/api/v1/client/push', body)
-  end
-
   def close
-    url = "http://localhost:4567/stream/v1/host/unsubscribe/#{@planning_session.host_name}"
-    send_get(url)
+    @listener.terminate if @listener.present?
+    send_get("stream/unsubscribe/#{@planning_session.host_name}")
   end
 
   def start
-    url = "http://localhost:4567/api/v1/stream/subscribe/#{@planning_session.host_name}/#{@planning_session.host_name}"
+    url = "stream/subscribe/#{@planning_session.host_name}/#{@planning_session.host_name}"
     open_stream(url, progress_handler)
   end
 
-  def start_poker
-    show_progress(0, @planning_session.voters_count)
-    r_set @planning_session.host_name, @planning_session.init_structure.to_json
-    Thread.new do
-      start
+  def start_poker(override=false)
+    if override || r_get(@planning_session.host_name).nil?
+      show_progress(0, @planning_session.voters_count)
+      r_set @planning_session.host_name, @planning_session.init_structure.to_json
+      @listener = Thread.new do
+        start
+      end
+    else
+      show_text "Voting for the host - #{@planning_session.host_name} is pending yet. \n"
+      show_text "Type 'poker repeat' if you want to start over or 'poker end' to terminate."
+      return
     end
   end
 end

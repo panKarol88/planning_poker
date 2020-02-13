@@ -8,15 +8,16 @@ namespace '/api/v1' do
 
     get '/subscribe/:host_name/:listener_name' do
       stream(:keep_open) do |out|
+        EventMachine::PeriodicTimer.new(20) { out << " " unless out.closed? }
         connections << out
         # purge dead connections
-        # out.callback { connections.delete(out) }
+        out.callback { connections.delete(out) }
       end
     end
 
     get '/unsubscribe/:host_name' do
       host_name = params['host_name']
-      connections.select{|c| c.app.env['REQUEST_URI'].split('/').last == host_name}.each do |out|
+      connections.select{|c| c.app.env['REQUEST_URI'].split('/')[-2] == host_name}.each do |out|
         out.close
       end
     end
@@ -27,7 +28,11 @@ namespace '/api/v1' do
       content_type 'application/json'
     end
 
-    # { vote: { voter_name: voter_name, points: points }, host_name: host_name }
+    get '/planning/:host_name' do
+      host_name = params['host_name']
+
+    end
+
     post '/vote' do
       body = request.body.read
       body_hash = JSON.parse body if body.present?
@@ -40,7 +45,6 @@ namespace '/api/v1' do
           points: vote['points'])
 
       if vote.set_vote!
-        binding.pry
         connections.select{|c| c.app.env['REQUEST_URI'].split('/')[-2] == host_name}.each do |out|
           out << { event: vote.voting_status }.to_json unless out.closed?
         end
@@ -52,28 +56,14 @@ namespace '/api/v1' do
       body = request.body.read
       body_hash = JSON.parse body if body.present?
       host_name = body_hash['host_name']
-      recipient = body_hash['recipient']
+      event = body_hash['event']
+      text = body_hash['text']
 
-      p 'BOOM'
-      p body
-      p connections.count
-      p connections.map{|c| c.app.env['REQUEST_URI'].split('/').last}
-      p connections.map{|c| c.app.env['REQUEST_URI'].split('/')[-2]}
-      p recipient
-
-      subscribers = if recipient == 'all'
-                      connections.select{|c| c.app.env['REQUEST_URI'].split('/')[-2] == host_name}
-                    else
-                      connections.select{|c| c.app.env['REQUEST_URI'].split('/').last == host_name}
-                    end
-      p subscribers.map{|c| c.app.env['REQUEST_URI'].split('/').last}
-      if subscribers.present?
-        subscribers.each do |out|
-          out << body unless out.closed?
-        end
-      else
-        [204, { message: 'no-content' }]
+      connections.select{|c| c.app.env['REQUEST_URI'].split('/')[-2] == host_name}.each do |out|
+        out << { event: event, text: text }.to_json unless out.closed?
       end
+
+      [200]
     end
   end
 end

@@ -15,11 +15,11 @@ class VotingService
     @vote.validate!
 
     @listener = Thread.new do
-      url = "http://localhost:4567/api/v1/stream/subscribe/karol/#{@vote.voter_name}"
+      url = "/stream/subscribe/#{@vote.host_name}/#{@vote.voter_name}"
       open_stream(url, progress_handler)
     end
 
-    response = send_post('http://localhost:4567/api/v1/client/vote', @vote.body)
+    response = send_post('client/vote', @vote.body)
     handle_response response
   rescue ActiveModel::ValidationError
     log_error(@vote.errors.full_messages)
@@ -39,11 +39,13 @@ class VotingService
     end
 
     body = JSON.parse response.body if response.body.present?
+    puts 'RESPONSE'
+    puts body['status']
     case body['status']
     when voting_statuses[:successful_vote]
       print_progress @vote.host_name
     when voting_statuses[:no_such_planning]
-      show_text("There is not palnning for the host: #{@vote.host_name}")
+      show_text("There is no planning for the host: #{@vote.host_name}")
     when voting_statuses[:already_voted]
       show_text('You already voted.')
     when voting_statuses[:unsuccessful_vote]
@@ -51,21 +53,27 @@ class VotingService
     when voting_statuses[:too_many_voters_already]
       show_text('Bummer ... team already voted :(')
     when voting_statuses[:voters_max_reached]
+      print_progress @vote.host_name
       print_results @vote.host_name
     end
   end
 
   def progress_handler
     Proc.new do |chunk|
+      puts 'CHUNK'
+      puts chunk
       if chunk.present?
         message = JSON.parse chunk
-        case
-        when message['text'].present?
-          handle_text message['text']
-        when message['event'].present?
+        if message['event'].present?
           case message['event']
-          when 'successful_vote'
+          when voting_statuses[:successful_vote]
             print_progress @vote.host_name
+          when voting_statuses[:voters_max_reached], voting_statuses[:ended]
+            print_progress @vote.host_name
+            print_results @vote.host_name
+          when voting_statuses[:restarted]
+            show_text message['text']
+            @listener.terminate if @listener.present?
           end
         else
           puts message
